@@ -1,0 +1,39 @@
+<?php
+
+namespace App\Services;
+
+use setasign\Fpdi\Tcpdf\Fpdi;
+
+class ServicePdfOptimizer
+{
+    
+    public static function optimizePdf(string $inputFile)
+    {
+        $pdf = new Fpdi();
+        $pageCount = $pdf->setSourceFile($inputFile);
+
+         // Supprimer les métadonnées
+        $pdf->setCreator('');
+    // $pdf->setProducer('');
+    // $pdf->setCreationDate('');
+    // $pdf->setModDate('');
+    
+
+        for ($pageNo = 1; $pageNo <= $pageCount; $pageNo++) {
+            $tplIdx = $pdf->importPage($pageNo);
+            $pdf->AddPage();
+            $pdf->useTemplate($tplIdx);
+            $pdf->SetCompression(true);
+        }
+
+        $pdf->Output($inputFile, 'F');
+
+        $newOutput = str_replace('.pdf','.png', $inputFile);
+        $command = 'convert -density 300 -trim "' . $inputFile . '" -quality 100 "' . $newOutput . '"';
+        system($command, $retval);
+        
+        unlink($inputFile);
+        return $newOutput;
+    }
+
+}
